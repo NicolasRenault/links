@@ -5,15 +5,17 @@ import { Image } from "astro:assets";
 export interface Props {
 	title: string;
 	icon: string;
-	url: string;
+	href: string;
 	description: string;
+	isButton?: boolean;
 }
 
-const {title, icon, url, description} = Astro.props;
+const {title, icon, href, description, isButton} = Astro.props;
+const cleanedTitle = title.toLocaleLowerCase().replaceAll(" ", "-");
 const randomDeg = Math.floor(Math.random() * 180) + "deg";
 ---
 
-<article id={title}>
+<article id={cleanedTitle}>
 	<div class="card-container">
 		<div
 			class:list={[
@@ -28,16 +30,32 @@ const randomDeg = Math.floor(Math.random() * 180) + "deg";
 
 				{description && <p class="description">{description}</p>}
 
-				<a
-					href={url}
-					title={title + " | " + description}
-					aria-label={title + " | " + description}
-					class="main-link"
-					target="_blank"
-				>
-					<!-- Need to extract the main link and display it on top of the text to avoid weird Astro rendering -->
-					<!-- See https://github.com/withastro/astro/issues/4864 -->
-				</a>
+				{
+					isButton && 
+					<button 
+						id={cleanedTitle + "-button"}
+						onclick={"handleButton('" + href + "')"}
+						class="main-link"
+						title={title + " | " + description}
+					>
+						<!-- Need to extract the main link and display it on top of the text to avoid weird Astro rendering -->
+						<!-- See https://github.com/withastro/astro/issues/4864 -->
+					</button>
+				}
+				{
+					!isButton &&
+					<a
+						href={href}
+						title={title + " | " + description}
+						aria-label={title + " | " + description}
+						class="main-link"
+						target="_blank"
+					>
+						<!-- Need to extract the main link and display it on top of the text to avoid weird Astro rendering -->
+						<!-- See https://github.com/withastro/astro/issues/4864 -->
+					</a>
+				}
+				
 			</div>
 		</div>
 	</div>
@@ -80,6 +98,7 @@ const randomDeg = Math.floor(Math.random() * 180) + "deg";
 		margin: var(--gap);
 		padding: 3px;
 		width: calc(100% - (var(--gap) * 2));
+		min-height: var(--heigth);
 		height: var(--heigth);
 
 		color: var(--text-rgb);
@@ -103,7 +122,8 @@ const randomDeg = Math.floor(Math.random() * 180) + "deg";
 
 			transition: outline-width 0.1s ease;
 
-			a {
+			a, 
+			button {
 				color: var(--text-rgb);
 				text-decoration: none;
 			}
@@ -155,6 +175,10 @@ const randomDeg = Math.floor(Math.random() * 180) + "deg";
 				left: 0;
 				width: 100%;
 				height: 100%;
+
+				background: transparent;
+				outline: 0;
+				border: 0;
 			}
 			&:has(.main-link:focus-visible) {
 				outline: 4px solid var(--text-rgb);
@@ -237,6 +261,29 @@ const randomDeg = Math.floor(Math.random() * 180) + "deg";
 				setTimeout(() => {
 					animate();
 				}, 30);
+			}
+		}
+	}
+</script>
+
+<script is:inline>
+	/**
+	 * Handle button behavior based on params.
+	 * 
+	 * @param param [string] Param for button behavior in formation "[action] [actionParam]".
+	 */
+	function handleButton(param) {
+		const params = param.split(" ");
+		const action = params[0];
+		const actionParam = params[1];
+
+		if(action === "copy") {
+			try {
+				navigator.clipboard.writeText(actionParam);
+				alert(actionParam + " copied to clipboard.")
+			} catch (error) {
+				console.error("Error when copying " + actionParam + " to clipboard:" + error);
+				alert("Error when copying " + actionParam + " to clipboard:" + error);
 			}
 		}
 	}
